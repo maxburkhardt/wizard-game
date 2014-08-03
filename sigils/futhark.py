@@ -1,12 +1,12 @@
 from sigil import Sigil
 
-class FutharkSigil(Sigil):
-  def __init__(self, sprite):
+class Futhark(Sigil):
+  def __init__(self, name):
     self.language = "futhark"
-    self.color = "blue"
-    Sigil.__init__(self, sprite)
+    self.color = (0, 0, 255)
+    Sigil.__init__(self, name, self.color)
 
-class Fehu(FutharkSigil):
+class Fehu(Futhark):
   def __init__(self):
     self.name = "fehu"
-    FutharkSigil.__init__(self, "fehu.png")
+    Futhark.__init__(self, self.name)
