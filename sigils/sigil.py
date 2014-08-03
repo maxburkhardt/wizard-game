@@ -10,6 +10,8 @@ class Sigil(pygame.sprite.Sprite):
     self.image = pygame.Surface([100, 150])
     self.image.fill(color)
     self.rect = self.image.get_rect()
+    self.state = "AVAILABLE"
 
   def update(self):
-    self.rect.x -= 1 
+    if self.state == "AVAILABLE":
+      self.rect.x -= 1 

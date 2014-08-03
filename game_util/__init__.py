@@ -19,6 +19,6 @@ def generate_ui():
     pygame.draw.line(background, BLACK, (0, 200), (1066, 200), 4)
     pygame.draw.line(background, BLACK, (0, 400), (1066, 400), 4)
     for i in xrange(8):
-      pygame.draw.rect(background, BLACK, (15 + i * 133, 25, 100, 150), 4)
-      pygame.draw.rect(background, BLACK, (15 + i * 133, 425, 100, 150), 4)
+      pygame.draw.rect(background, BLACK, (15 + i * 133, 25, 100, 150), 1)
+      pygame.draw.rect(background, BLACK, (15 + i * 133, 425, 100, 150), 1)
     return background
