@@ -9,4 +9,8 @@ class Futhark(Sigil):
 class Fehu(Futhark):
   def __init__(self):
     self.name = "fehu"
+    self.cast_time = 1
     Futhark.__init__(self, self.name)
+
+  def on_cast(self):
+    print "fehu finished casting!"

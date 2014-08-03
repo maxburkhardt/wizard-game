@@ -9,4 +9,8 @@ class Heiroglyph(Sigil):
 class Bird(Heiroglyph):
   def __init__(self):
     self.name = "bird"
+    self.cast_time = 2
     Heiroglyph.__init__(self, self.name)
+
+  def on_cast(self):
+    print "bird finished casting!"

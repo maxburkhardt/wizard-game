@@ -36,6 +36,8 @@ if __name__ == "__main__":
     # set up player info
     player = Wizard()
     opponent = Wizard()
+    game_state = {"player": player, "opponent": opponent, "all_sprites":
+            all_sprites}
 
     # begin main loop
     running = True
@@ -68,6 +70,13 @@ if __name__ == "__main__":
                         sprite.rect.x = spellbook_position[0]
                         sprite.rect.y = spellbook_position[1]
                         available_sprites.remove(sprite)
-                        player.spellbook.add(sprite)
+                        player.spellbook.append(sprite)
                         sprite.state = "CLAIMED"
+
+                # handle clicking on a sigil in your spellbook
+                clicked_in_spellbook = [s for s in player.spellbook if
+                        s.rect.collidepoint(pos)]
+                for sprite in clicked_in_spellbook:
+                    sprite.cast(game_state)
+
     pygame.quit()
