@@ -26,6 +26,8 @@ class Sigil(pygame.sprite.Sprite):
         self.cast_game_state["player"].layout_sigils()
 
   def cast(self, game_state):
+    if self.state == "CASTING":
+      return
     self.state = "CASTING"
     self.start_cast = time.time()
     self.cast_game_state = game_state
