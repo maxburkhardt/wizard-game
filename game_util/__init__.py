@@ -2,6 +2,8 @@ import os
 import pygame
 from pygame.locals import *
 
+BLACK = (0,0,0)
+
 def load_image(name):
     try:
         image = pygame.image.load(name)
@@ -14,6 +16,9 @@ def load_image(name):
 def generate_ui():
     background = pygame.Surface((1066, 600)).convert()
     background.fill((250, 250, 250))
-    pygame.draw.line(background, (0,0,0), (0, 200), (1066, 200), 4)
-    pygame.draw.line(background, (0,0,0), (0, 400), (1066, 400), 4)
+    pygame.draw.line(background, BLACK, (0, 200), (1066, 200), 4)
+    pygame.draw.line(background, BLACK, (0, 400), (1066, 400), 4)
+    for i in xrange(8):
+      pygame.draw.rect(background, BLACK, (15 + i * 133, 25, 100, 150), 4)
+      pygame.draw.rect(background, BLACK, (15 + i * 133, 425, 100, 150), 4)
     return background
