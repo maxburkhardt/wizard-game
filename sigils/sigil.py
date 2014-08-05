@@ -13,6 +13,13 @@ class Sigil(pygame.sprite.Sprite):
     self.rect = self.image.get_rect()
     self.state = "AVAILABLE"
 
+  def remove(self):
+    if self in self.cast_game_state["player"].spellbook:
+      self.cast_game_state["player"].spellbook.remove(self)
+    self.cast_game_state["all_sprites"].remove(self)
+    self.cast_game_state["player"].layout_sigils()
+
+
   def update(self):
     if self.state == "AVAILABLE":
       self.rect.x -= 1 
@@ -21,13 +28,17 @@ class Sigil(pygame.sprite.Sprite):
       if delta > self.cast_time:
         self.state = "FINISHED"
         self.on_cast()
-        self.cast_game_state["player"].spellbook.remove(self)
-        self.cast_game_state["all_sprites"].remove(self)
-        self.cast_game_state["player"].layout_sigils()
+        self.remove()
+    elif self.state == "COMBO_CASTING":
+      # TODO animation here?
+      pass
 
   def cast(self, game_state):
-    if self.state == "CASTING":
+    if self.state == "CASTING" or self.state == "COMBO_CASTING":
       return
     self.state = "CASTING"
     self.start_cast = time.time()
     self.cast_game_state = game_state
+
+  def __str__(self):
+    return self.name

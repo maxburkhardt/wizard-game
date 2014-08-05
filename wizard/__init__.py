@@ -4,6 +4,7 @@ class Wizard:
   def __init__(self):
     self.health = 100
     self.spellbook = []
+    self.combo_select = []
 
   def can_get_sigil(self):
     return len(self.spellbook) <= 7
