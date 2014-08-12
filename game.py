@@ -16,21 +16,12 @@ def get_random_sigil():
 def generate_sigils(groups):
     new_sigil = get_random_sigil()()
     new_sigil.rect.x = 966
-    new_sigil.rect.y = 225
+    new_sigil.rect.y = 325
     for group in groups:
         group.add(new_sigil)
 
 
 if __name__ == "__main__":
-
-    # initialize pygame & display
-    pygame.init()
-    screen = pygame.display.set_mode((1066, 600))
-    pygame.display.set_caption("Wizards!")
-    screen.blit(generate_ui(), (0, 0))
-    pygame.display.flip()
-    clock = pygame.time.Clock()
-
     # initialize sprites for sigils
     all_sprites = pygame.sprite.Group()
     available_sprites = pygame.sprite.Group()
@@ -44,6 +35,14 @@ if __name__ == "__main__":
     game_state.opponent = opponent
     game_state.all_sprites = all_sprites
     game_state.sigil_overlay_sprites = sigil_overlay_sprites
+
+    # initialize pygame & display
+    pygame.init()
+    screen = pygame.display.set_mode((1066, 800))
+    pygame.display.set_caption("Wizards!")
+    screen.blit(generate_ui(), (0, 0))
+    pygame.display.flip()
+    clock = pygame.time.Clock()
 
     # begin main loop
     running = True
@@ -87,6 +86,7 @@ if __name__ == "__main__":
                         available_sprites.remove(sprite)
                         player.spellbook.append(sprite)
                         sprite.state = "CLAIMED"
+                        sprite.owner = player
 
                 # handle clicking on a sigil in your spellbook
                 clicked_in_spellbook = [s for s in player.spellbook if

@@ -1,4 +1,5 @@
 from sigil import Sigil
+import game_state
 
 
 class Futhark(Sigil):
@@ -15,4 +16,5 @@ class Fehu(Futhark):
         Futhark.__init__(self, self.name)
 
     def on_cast(self):
+        self.owner.health += 10
         print "fehu finished casting!"

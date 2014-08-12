@@ -11,7 +11,7 @@ class Wizard:
         return len(self.spellbook) <= 7
 
     def get_available_sigil_position(self):
-        return (15 + len(self.spellbook) * 133, 425)
+        return (15 + len(self.spellbook) * 133, 525)
 
     def layout_sigils(self):
         i = 0

@@ -14,6 +14,7 @@ class Sigil(pygame.sprite.Sprite):
         self.image.fill(color)
         self.rect = self.image.get_rect()
         self.state = "AVAILABLE"
+        self.owner = None
         self.overlay = None
 
     def remove(self):

@@ -1,4 +1,5 @@
 from sigil import Sigil
+import game_state
 
 
 class Heiroglyph(Sigil):
@@ -15,4 +16,8 @@ class Bird(Heiroglyph):
         Heiroglyph.__init__(self, self.name)
 
     def on_cast(self):
+        if self.owner == game_state.player:
+            game_state.opponent.health -= 10
+        else:
+            game_state.player.health -= 10
         print "bird finished casting!"
