@@ -18,3 +18,8 @@ class Wizard:
         for sigil in self.spellbook:
             sigil.rect.x = 15 + (i * 133)
             i += 1
+
+    def clear_selection(self, game_state):
+        for sigil in self.combo_select:
+            sigil.deselect(game_state)
+        self.combo_select = []

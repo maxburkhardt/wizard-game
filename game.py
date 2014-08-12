@@ -34,13 +34,14 @@ if __name__ == "__main__":
     # initialize sprites for sigils
     all_sprites = pygame.sprite.Group()
     available_sprites = pygame.sprite.Group()
+    sigil_overlay_sprites = pygame.sprite.Group()
     sigil_appearance_count = 0
 
     # set up player info
     player = Wizard()
     opponent = Wizard()
     game_state = {"player": player, "opponent": opponent, "all_sprites":
-        all_sprites}
+        all_sprites, "sigil_overlay_sprites": sigil_overlay_sprites}
 
     # begin main loop
     running = True
@@ -53,8 +54,10 @@ if __name__ == "__main__":
                 available_sprites.remove(sigil)
         sigil_appearance_count += 1
         all_sprites.update()
+        sigil_overlay_sprites.update()
         screen.blit(generate_ui(), (0, 0))
         all_sprites.draw(screen)
+        sigil_overlay_sprites.draw(screen)
         pygame.display.flip()
         clock.tick(60)
         for event in pygame.event.get():
@@ -75,7 +78,7 @@ if __name__ == "__main__":
                                        s.rect.collidepoint(pos)]
                     for sprite in clicked_sprites:
                         # we clear combo select if you click something else
-                        player.combo_select = []
+                        player.clear_selection(game_state)
                         spellbook_position = player.get_available_sigil_position()
                         sprite.rect.x = spellbook_position[0]
                         sprite.rect.y = spellbook_position[1]
@@ -92,23 +95,26 @@ if __name__ == "__main__":
                         # if the player clicks a non-combo sigil, cast it
                         if sprite not in player.combo_select:
                             # we clear combo select if you click something else
-                            player.combo_select = []
+                            player.clear_selection(game_state)
                             sprite.cast(game_state)
                         # otherwise, cast the combo it's in
                         else:
                             # this will make a combo object based off the
                             # sorted list of sigil names
                             combo_type = combo.select_combo("".join(sorted(map(str, player.combo_select))))
-                            selected_combo = combo_type(player.combo_select)
-                            player.combo_select = []
-                            # this makes the combo sprite not appear
-                            selected_combo.rect.x = -100
-                            selected_combo.rect.y = -150
-                            all_sprites.add(selected_combo)
-                            selected_combo.cast(game_state)
-                            # otherwise, we do special group selection things
+                            if combo_type:
+                                selected_combo = combo_type(player.combo_select)
+                                player.clear_selection(game_state)
+                                # this makes the combo sprite not appear
+                                selected_combo.rect.x = -100
+                                selected_combo.rect.y = -150
+                                all_sprites.add(selected_combo)
+                                selected_combo.cast(game_state)
+                            else:
+                                player.clear_selection(game_state)
+                    # otherwise, we do special group selection things
                     else:
                         player.combo_select.append(sprite)
-                        sprite.image.fill((0, 255, 0))
+                        sprite.select(game_state)
 
     pygame.quit()
