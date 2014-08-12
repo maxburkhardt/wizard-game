@@ -7,7 +7,7 @@ from pygame.locals import *
 from game_util import *
 from wizard import Wizard
 from sigils import futhark, heiroglyphs, combo
-
+import game_state
 
 def get_random_sigil():
     return random.choice([futhark.Fehu, heiroglyphs.Bird])
@@ -40,8 +40,10 @@ if __name__ == "__main__":
     # set up player info
     player = Wizard()
     opponent = Wizard()
-    game_state = {"player": player, "opponent": opponent, "all_sprites":
-        all_sprites, "sigil_overlay_sprites": sigil_overlay_sprites}
+    game_state.player = player
+    game_state.opponent = opponent
+    game_state.all_sprites = all_sprites
+    game_state.sigil_overlay_sprites = sigil_overlay_sprites
 
     # begin main loop
     running = True
@@ -78,7 +80,7 @@ if __name__ == "__main__":
                                        s.rect.collidepoint(pos)]
                     for sprite in clicked_sprites:
                         # we clear combo select if you click something else
-                        player.clear_selection(game_state)
+                        player.clear_selection()
                         spellbook_position = player.get_available_sigil_position()
                         sprite.rect.x = spellbook_position[0]
                         sprite.rect.y = spellbook_position[1]
@@ -95,8 +97,8 @@ if __name__ == "__main__":
                         # if the player clicks a non-combo sigil, cast it
                         if sprite not in player.combo_select:
                             # we clear combo select if you click something else
-                            player.clear_selection(game_state)
-                            sprite.cast(game_state)
+                            player.clear_selection()
+                            sprite.cast()
                         # otherwise, cast the combo it's in
                         else:
                             # this will make a combo object based off the
@@ -104,17 +106,17 @@ if __name__ == "__main__":
                             combo_type = combo.select_combo("".join(sorted(map(str, player.combo_select))))
                             if combo_type:
                                 selected_combo = combo_type(player.combo_select)
-                                player.clear_selection(game_state)
+                                player.clear_selection()
                                 # this makes the combo sprite not appear
                                 selected_combo.rect.x = -100
                                 selected_combo.rect.y = -150
                                 all_sprites.add(selected_combo)
-                                selected_combo.cast(game_state)
+                                selected_combo.cast()
                             else:
-                                player.clear_selection(game_state)
+                                player.clear_selection()
                     # otherwise, we do special group selection things
                     else:
                         player.combo_select.append(sprite)
-                        sprite.select(game_state)
+                        sprite.select()
 
     pygame.quit()

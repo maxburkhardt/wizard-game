@@ -1,5 +1,6 @@
 from sigil import Sigil
 import sys
+import game_state
 
 
 class Combo(Sigil):
@@ -9,11 +10,10 @@ class Combo(Sigil):
             sys.exit(1)
         Sigil.__init__(self, name, (0, 0, 0))
 
-    def cast(self, game_state):
+    def cast(self):
         for sigil in self.child_sigils:
-            sigil.cast_game_state = game_state
             sigil.state = "COMBO_CASTING"
-        Sigil.cast(self, game_state)
+        Sigil.cast(self)
 
     def on_cast(self):
         for sigil in self.child_sigils:

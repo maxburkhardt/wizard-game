@@ -19,7 +19,7 @@ class Wizard:
             sigil.rect.x = 15 + (i * 133)
             i += 1
 
-    def clear_selection(self, game_state):
+    def clear_selection(self):
         for sigil in self.combo_select:
-            sigil.deselect(game_state)
+            sigil.deselect()
         self.combo_select = []
