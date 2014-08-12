@@ -8,8 +8,10 @@ from game_util import *
 from wizard import Wizard
 from sigils import futhark, heiroglyphs, combo
 
+
 def get_random_sigil():
     return random.choice([futhark.Fehu, heiroglyphs.Bird])
+
 
 def generate_sigils(groups):
     new_sigil = get_random_sigil()()
@@ -18,26 +20,27 @@ def generate_sigils(groups):
     for group in groups:
         group.add(new_sigil)
 
+
 if __name__ == "__main__":
 
     # initialize pygame & display
     pygame.init()
     screen = pygame.display.set_mode((1066, 600))
-    pygame.display.set_caption("Wizards!") 
+    pygame.display.set_caption("Wizards!")
     screen.blit(generate_ui(), (0, 0))
     pygame.display.flip()
     clock = pygame.time.Clock()
 
     # initialize sprites for sigils
     all_sprites = pygame.sprite.Group()
-    available_sprites = pygame.sprite.Group() 
+    available_sprites = pygame.sprite.Group()
     sigil_appearance_count = 0
 
     # set up player info
     player = Wizard()
     opponent = Wizard()
     game_state = {"player": player, "opponent": opponent, "all_sprites":
-            all_sprites}
+        all_sprites}
 
     # begin main loop
     running = True
@@ -56,7 +59,7 @@ if __name__ == "__main__":
         clock.tick(60)
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and
-                    event.key == K_ESCAPE):
+                                              event.key == K_ESCAPE):
                 running = False
                 break
             elif event.type == KEYDOWN and event.key == K_LSHIFT:
@@ -69,7 +72,7 @@ if __name__ == "__main__":
                 # handle clicking on available sigil
                 if player.can_get_sigil():
                     clicked_sprites = [s for s in available_sprites if
-                            s.rect.collidepoint(pos)]
+                                       s.rect.collidepoint(pos)]
                     for sprite in clicked_sprites:
                         # we clear combo select if you click something else
                         player.combo_select = []
@@ -82,12 +85,12 @@ if __name__ == "__main__":
 
                 # handle clicking on a sigil in your spellbook
                 clicked_in_spellbook = [s for s in player.spellbook if
-                        s.rect.collidepoint(pos)]
+                                        s.rect.collidepoint(pos)]
                 for sprite in clicked_in_spellbook:
                     # if we're not selecting spells for a combo, proceed as normal
                     if not combo_select:
                         # if the player clicks a non-combo sigil, cast it
-                        if sprite not in player.combo_select: 
+                        if sprite not in player.combo_select:
                             # we clear combo select if you click something else
                             player.combo_select = []
                             sprite.cast(game_state)
@@ -102,11 +105,10 @@ if __name__ == "__main__":
                             selected_combo.rect.x = -100
                             selected_combo.rect.y = -150
                             all_sprites.add(selected_combo)
-                            selected_combo.cast(game_state) 
-                    # otherwise, we do special group selection things
+                            selected_combo.cast(game_state)
+                            # otherwise, we do special group selection things
                     else:
                         player.combo_select.append(sprite)
-                        sprite.image.fill((0,255,0))
-
+                        sprite.image.fill((0, 255, 0))
 
     pygame.quit()
