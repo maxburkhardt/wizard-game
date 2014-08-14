@@ -5,17 +5,16 @@ import pygame
 import random
 from pygame.locals import *
 from game_util import *
+from sigil_util import *
 from wizard import Wizard
 from sigils import futhark, heiroglyphs, combo
 import game_state
 import client_networking
-
-def get_random_sigil():
-    return random.choice([futhark.Fehu, heiroglyphs.Bird])
+import time
 
 
-def generate_sigils(groups):
-    new_sigil = get_random_sigil()()
+def generate_sigils(groups, sigil):
+    new_sigil = sigil
     new_sigil.rect.x = 966
     new_sigil.rect.y = 325
     for group in groups:
@@ -47,17 +46,33 @@ if __name__ == "__main__":
 
     # initialize networking
     client_networking.establish_connection("127.0.0.1", 1111)
+    print "Establishing connection to server and waiting for game to start."
+    while True:
+        if not client_networking.recv_queue.empty():
+            message = client_networking.recv_queue.get()
+            if message == "READY":
+                break
+        time.sleep(1)
+
 
     # begin main loop
     running = True
     combo_select = False
     while running:
+        # check for messages from the server
+        if not client_networking.recv_queue.empty():
+            message = client_networking.recv_queue.get()
+            command, data = message.split(" ")
+            if command == "NEW":
+                generate_sigils([all_sprites, available_sprites], sigil_deserialize(data))
+        # every 3 seconds we'll look for sigils off the screen and clean them up
         if sigil_appearance_count % 180 == 0:
-            generate_sigils([all_sprites, available_sprites])
             out_of_bounds = [s for s in available_sprites if s.rect.x <= -150]
             for sigil in out_of_bounds:
                 available_sprites.remove(sigil)
         sigil_appearance_count += 1
+
+        # update all sprites and draw the UI, also keep the framerate synced
         all_sprites.update()
         sigil_overlay_sprites.update()
         screen.blit(generate_ui(), (0, 0))
@@ -65,6 +80,8 @@ if __name__ == "__main__":
         sigil_overlay_sprites.draw(screen)
         pygame.display.flip()
         clock.tick(60)
+
+        # event handling
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and
                                               event.key == K_ESCAPE):

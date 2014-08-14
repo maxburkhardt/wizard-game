@@ -2,6 +2,7 @@ import time
 from game_util import *
 import sigil_overlay
 import game_state
+import uuid
 
 
 class Sigil(pygame.sprite.Sprite):
@@ -16,6 +17,7 @@ class Sigil(pygame.sprite.Sprite):
         self.state = "AVAILABLE"
         self.owner = None
         self.overlay = None
+        self.uuid = str(uuid.uuid4())
 
     def remove(self):
         if self in game_state.player.spellbook:

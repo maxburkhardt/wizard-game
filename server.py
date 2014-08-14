@@ -5,7 +5,9 @@ import thread
 import threading
 import Queue
 import time
-import uuid
+import random
+from sigils import heiroglyphs, futhark
+from sigil_util import *
 # for later:
 # import ssl
 
@@ -39,6 +41,7 @@ def handle_initial(clientsock, addr):
 
         # now we dispatch based on which socket we're looking at
         if conntype == "SEND":
+            skip_release = False
             players_lock.acquire()
             for player in players:
                 if player.uuid == uuid:
@@ -46,6 +49,7 @@ def handle_initial(clientsock, addr):
                     if player.ctos_queue is None:
                         player.ctos_queue = Queue.Queue()
                         print "Created a CTOS queue for player", player.uuid
+                        skip_release = True
                         players_lock.release()
                         handle_ctos_socket(clientsock, addr, player.ctos_queue)
                         break
@@ -53,14 +57,17 @@ def handle_initial(clientsock, addr):
                         # this means this player already has a ctos queue
                         players_lock.release()
                         return
-            players_lock.release()
+            if not skip_release:
+                players_lock.release()
         elif conntype == "RECV":
+            skip_release = False
             players_lock.acquire()
             for player in players:
                 if player.uuid == uuid:
                     if player.stoc_queue is None:
                         player.stoc_queue = Queue.Queue()
                         print "Created a STOC queue for player", player.uuid
+                        skip_release = True
                         players_lock.release()
                         handle_stoc_socket(clientsock, addr, player.stoc_queue)
                         break
@@ -68,7 +75,8 @@ def handle_initial(clientsock, addr):
                         # this means this player already has a stoc queue
                         players_lock.release()
                         return
-            players_lock.release()
+            if not skip_release:
+                players_lock.release()
     except socket.error:
         print "Socket error encountered in dispatch from", addr[0]
         return
@@ -114,21 +122,53 @@ def start_socket_server():
         print "Connection from", addr
         thread.start_new_thread(handle_initial, (clientsock, addr))
 
-# make queues
+
+def broadcast(message):
+    for player in players:
+        player.stoc_queue.put(message)
+
+def get_random_sigil():
+    return random.choice([futhark.Fehu, heiroglyphs.Bird])
+
+
+# make data structures
 players = (Player(), Player())
 players_lock = threading.Lock()
+
+available_sigils = []
+available_sigils_lock = threading.Lock()
 
 # kick off the server thread
 thread.start_new_thread(start_socket_server, ())
 
 # now we'll go in to the main event loop
-running = True
 print "Waiting for clients to connect"
-while running:
+while True:
     time.sleep(0.5)
     all_in = True
     for player in players:
         if player.ctos_queue is None or player.stoc_queue is None:
             all_in = False
     if all_in:
+        broadcast("READY")
         print "Game ready!"
+        break
+
+running = True
+start_time = time.time()
+loop_count = 0
+sigils_deployed = 0
+while running:
+    time.sleep(0.1)
+    if loop_count % 10 == 0:
+        current_time = time.time()
+        if (current_time - start_time) / 3 >= sigils_deployed:
+            print "Deploying a sigil:", (current_time - start_time)
+            new_sigil = get_random_sigil()()
+            available_sigils_lock.acquire()
+            available_sigils.append(new_sigil)
+            available_sigils_lock.release()
+            broadcast("NEW " + sigil_serialize(new_sigil))
+            sigils_deployed += 1
+
+    loop_count += 1
