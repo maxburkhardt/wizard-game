@@ -8,6 +8,7 @@ from game_util import *
 from wizard import Wizard
 from sigils import futhark, heiroglyphs, combo
 import game_state
+import client_networking
 
 def get_random_sigil():
     return random.choice([futhark.Fehu, heiroglyphs.Bird])
@@ -43,6 +44,9 @@ if __name__ == "__main__":
     screen.blit(generate_ui(), (0, 0))
     pygame.display.flip()
     clock = pygame.time.Clock()
+
+    # initialize networking
+    client_networking.establish_connection("127.0.0.1", 1111)
 
     # begin main loop
     running = True
