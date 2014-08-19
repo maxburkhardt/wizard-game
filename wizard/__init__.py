@@ -1,4 +1,4 @@
-import pygame
+import game_state
 
 
 class Wizard:
@@ -11,7 +11,8 @@ class Wizard:
         return len(self.spellbook) <= 7
 
     def get_available_sigil_position(self):
-        return (15 + len(self.spellbook) * 133, 525)
+        y_offset = 125 if game_state.opponent == self else 525
+        return (15 + len(self.spellbook) * 133, y_offset)
 
     def layout_sigils(self):
         i = 0

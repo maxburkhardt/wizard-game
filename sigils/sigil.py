@@ -3,6 +3,7 @@ from game_util import *
 import sigil_overlay
 import game_state
 import uuid
+import client_networking
 
 
 class Sigil(pygame.sprite.Sprite):
@@ -37,6 +38,20 @@ class Sigil(pygame.sprite.Sprite):
         elif self.state == "COMBO_CASTING":
             # TODO animation here?
             pass
+
+    def claim(self):
+        print "Sending claim message"
+        client_networking.send_queue.put("CLAIM " + self.uuid)
+        self.state = "CLAIMING"
+
+    def execute_claim(self, player):
+        spellbook_position = player.get_available_sigil_position()
+        self.rect.x = spellbook_position[0]
+        self.rect.y = spellbook_position[1]
+        game_state.available_sprites.remove(self)
+        player.spellbook.append(self)
+        self.state = "CLAIMED"
+        self.owner = player
 
     def cast(self):
         if self.state == "CASTING" or self.state == "COMBO_CASTING":

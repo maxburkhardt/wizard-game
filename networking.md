@@ -52,7 +52,13 @@ A new unclaimed sigil is available.
 CLAIM SIGIL-UUID
 ```
 
-The client wishes to grab the sigil specified by `SIGIL-UUID`.  _TODO: how to return success code?_
+The client wishes to grab the sigil specified by `SIGIL-UUID`. 
+### Claimed (CTOS)
+```
+CLAIMED PLAYER-UUID SIGIL-UUID
+```
+
+The client wishes to grab the sigil specified by `SIGIL-UUID`. 
 ### Cast (CTOS)
 ```
 CAST SIGIL-UUID [SIGIL-UUID...]

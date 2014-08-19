@@ -135,7 +135,7 @@ def get_random_sigil():
 players = (Player(), Player())
 players_lock = threading.Lock()
 
-available_sigils = []
+available_sigils = {}
 available_sigils_lock = threading.Lock()
 
 # kick off the server thread
@@ -160,13 +160,30 @@ loop_count = 0
 sigils_deployed = 0
 while running:
     time.sleep(0.1)
+
+    # process messages from clients
+    for player in players:
+        if not player.ctos_queue.empty():
+            message = player.ctos_queue.get()
+            split_message = message.split(" ")
+            command = split_message[0]
+            if command == "CLAIM":
+                print "Saw a claim request"
+                requested = split_message[1]
+                available_sigils_lock.acquire()
+                if requested in available_sigils.keys():
+                    broadcast("CLAIMED " + player.uuid + " " + requested)
+                    del available_sigils[requested]
+                # TODO move sigil to a player spellbook structure
+                available_sigils_lock.release()
+    # create new sigils
     if loop_count % 10 == 0:
         current_time = time.time()
         if (current_time - start_time) / 3 >= sigils_deployed:
             print "Deploying a sigil:", (current_time - start_time)
             new_sigil = get_random_sigil()()
             available_sigils_lock.acquire()
-            available_sigils.append(new_sigil)
+            available_sigils[new_sigil.uuid] = new_sigil
             available_sigils_lock.release()
             broadcast("NEW " + sigil_serialize(new_sigil))
             sigils_deployed += 1

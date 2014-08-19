@@ -17,24 +17,24 @@ def generate_sigils(groups, sigil):
     new_sigil = sigil
     new_sigil.rect.x = 966
     new_sigil.rect.y = 325
+    sprite_uuid_map[sigil.uuid] = new_sigil
     for group in groups:
         group.add(new_sigil)
 
 
 if __name__ == "__main__":
-    # initialize sprites for sigils
-    all_sprites = pygame.sprite.Group()
-    available_sprites = pygame.sprite.Group()
-    sigil_overlay_sprites = pygame.sprite.Group()
+    # initialize sigil infrastructure
     sigil_appearance_count = 0
+    sprite_uuid_map = {}
 
     # set up player info
     player = Wizard()
     opponent = Wizard()
     game_state.player = player
     game_state.opponent = opponent
-    game_state.all_sprites = all_sprites
-    game_state.sigil_overlay_sprites = sigil_overlay_sprites
+    game_state.all_sprites = pygame.sprite.Group()
+    game_state.available_sprites = pygame.sprite.Group()
+    game_state.sigil_overlay_sprites = pygame.sprite.Group()
 
     # initialize pygame & display
     pygame.init()
@@ -62,22 +62,34 @@ if __name__ == "__main__":
         # check for messages from the server
         if not client_networking.recv_queue.empty():
             message = client_networking.recv_queue.get()
-            command, data = message.split(" ")
+            split_input = map(str.strip, message.split(" "))
+            command = split_input[0]
             if command == "NEW":
-                generate_sigils([all_sprites, available_sprites], sigil_deserialize(data))
+                generate_sigils([game_state.all_sprites, game_state.available_sprites], sigil_deserialize(split_input[1]))
+            elif command == "CLAIMED":
+                print "Saw a claimed response:", message
+                print "I am", client_networking.client_uuid
+                claimed = sprite_uuid_map[split_input[2]]
+                if split_input[1] == client_networking.client_uuid:
+                    # this means we got it
+                    print "Executing a claim"
+                    claimed.execute_claim(player)
+                else:
+                    # this means we didn't
+                    claimed.execute_claim(opponent)
         # every 3 seconds we'll look for sigils off the screen and clean them up
         if sigil_appearance_count % 180 == 0:
-            out_of_bounds = [s for s in available_sprites if s.rect.x <= -150]
+            out_of_bounds = [s for s in game_state.available_sprites if s.rect.x <= -150]
             for sigil in out_of_bounds:
-                available_sprites.remove(sigil)
+                game_state.available_sprites.remove(sigil)
         sigil_appearance_count += 1
 
         # update all sprites and draw the UI, also keep the framerate synced
-        all_sprites.update()
-        sigil_overlay_sprites.update()
+        game_state.all_sprites.update()
+        game_state.sigil_overlay_sprites.update()
         screen.blit(generate_ui(), (0, 0))
-        all_sprites.draw(screen)
-        sigil_overlay_sprites.draw(screen)
+        game_state.all_sprites.draw(screen)
+        game_state.sigil_overlay_sprites.draw(screen)
         pygame.display.flip()
         clock.tick(60)
 
@@ -96,18 +108,12 @@ if __name__ == "__main__":
 
                 # handle clicking on available sigil
                 if player.can_get_sigil():
-                    clicked_sprites = [s for s in available_sprites if
+                    clicked_sprites = [s for s in game_state.available_sprites if
                                        s.rect.collidepoint(pos)]
                     for sprite in clicked_sprites:
                         # we clear combo select if you click something else
                         player.clear_selection()
-                        spellbook_position = player.get_available_sigil_position()
-                        sprite.rect.x = spellbook_position[0]
-                        sprite.rect.y = spellbook_position[1]
-                        available_sprites.remove(sprite)
-                        player.spellbook.append(sprite)
-                        sprite.state = "CLAIMED"
-                        sprite.owner = player
+                        sprite.claim()
 
                 # handle clicking on a sigil in your spellbook
                 clicked_in_spellbook = [s for s in player.spellbook if
@@ -131,7 +137,7 @@ if __name__ == "__main__":
                                 # this makes the combo sprite not appear
                                 selected_combo.rect.x = -100
                                 selected_combo.rect.y = -150
-                                all_sprites.add(selected_combo)
+                                game_state.all_sprites.add(selected_combo)
                                 selected_combo.cast()
                             else:
                                 player.clear_selection()
