@@ -67,16 +67,22 @@ if __name__ == "__main__":
             if command == "NEW":
                 generate_sigils([game_state.all_sprites, game_state.available_sprites], sigil_deserialize(split_input[1]))
             elif command == "CLAIMED":
-                print "Saw a claimed response:", message
-                print "I am", client_networking.client_uuid
                 claimed = sprite_uuid_map[split_input[2]]
                 if split_input[1] == client_networking.client_uuid:
                     # this means we got it
-                    print "Executing a claim"
                     claimed.execute_claim(player)
                 else:
                     # this means we didn't
                     claimed.execute_claim(opponent)
+            elif command == "COMPLETE":
+                # TODO no combo support yet
+                print "Cast of", sprite_uuid_map[split_input[1]].name, "complete"
+                sprite_uuid_map[split_input[1]].remove()
+            elif command == "HEALTH":
+                if split_input[1] == client_networking.client_uuid:
+                    player.health = int(split_input[2])
+                else:
+                    opponent.health = int(split_input[2])
         # every 3 seconds we'll look for sigils off the screen and clean them up
         if sigil_appearance_count % 180 == 0:
             out_of_bounds = [s for s in game_state.available_sprites if s.rect.x <= -150]

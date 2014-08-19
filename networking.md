@@ -67,7 +67,7 @@ CAST SIGIL-UUID [SIGIL-UUID...]
 The client wishes to cast this sigil (or combo of sigils).
 ### Cast Complete (STOC)
 ```
-COMPLETE SIGIL-UUID [SIGIL-UUID...]
+COMPLETE SIGIL-UUID [SIGIL-UUID...] PLAYER-UUID
 ```
 
 The specified sigil or combo of sigils has completed its cast. _TODO: who cast it?_

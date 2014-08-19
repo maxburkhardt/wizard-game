@@ -1,6 +1,7 @@
 from sigil import Sigil
 import sys
 import game_state
+import client_networking
 
 
 class Combo(Sigil):
@@ -11,9 +12,11 @@ class Combo(Sigil):
         Sigil.__init__(self, name, (0, 0, 0))
 
     def cast(self):
+        all_uuids = ""
         for sigil in self.child_sigils:
             sigil.state = "COMBO_CASTING"
-        Sigil.cast(self)
+            all_uuids += sigil.uuid
+        client_networking.send_queue.put("CAST " + all_uuids)
 
     def on_cast(self):
         for sigil in self.child_sigils:

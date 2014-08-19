@@ -21,8 +21,8 @@ class Sigil(pygame.sprite.Sprite):
         self.uuid = str(uuid.uuid4())
 
     def remove(self):
-        if self in game_state.player.spellbook:
-            game_state.player.spellbook.remove(self)
+        if self in self.owner.spellbook:
+            self.owner.spellbook.remove(self)
         game_state.all_sprites.remove(self)
         game_state.player.layout_sigils()
 
@@ -30,11 +30,7 @@ class Sigil(pygame.sprite.Sprite):
         if self.state == "AVAILABLE":
             self.rect.x -= 1
         elif self.state == "CASTING":
-            delta = time.time() - self.start_cast
-            if delta > self.cast_time:
-                self.state = "FINISHED"
-                self.on_cast()
-                self.remove()
+            pass
         elif self.state == "COMBO_CASTING":
             # TODO animation here?
             pass
@@ -57,7 +53,7 @@ class Sigil(pygame.sprite.Sprite):
         if self.state == "CASTING" or self.state == "COMBO_CASTING":
             return
         self.state = "CASTING"
-        self.start_cast = time.time()
+        client_networking.send_queue.put("CAST " + self.uuid)
 
     def select(self):
         if self.overlay:

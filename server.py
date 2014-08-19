@@ -8,6 +8,7 @@ import time
 import random
 from sigils import heiroglyphs, futhark
 from sigil_util import *
+from wizard import Wizard
 # for later:
 # import ssl
 
@@ -17,6 +18,7 @@ class Player:
         self.ctos_queue = None
         self.stoc_queue = None
         self.uuid = None
+        self.wizard = Wizard()
 
 
 def handle_initial(clientsock, addr):
@@ -138,6 +140,8 @@ players_lock = threading.Lock()
 available_sigils = {}
 available_sigils_lock = threading.Lock()
 
+casting_sigils = []
+
 # kick off the server thread
 thread.start_new_thread(start_socket_server, ())
 
@@ -173,9 +177,26 @@ while running:
                 available_sigils_lock.acquire()
                 if requested in available_sigils.keys():
                     broadcast("CLAIMED " + player.uuid + " " + requested)
+                    player.wizard.spellbook.append(available_sigils[requested])
+                    available_sigils[requested].owner = player
                     del available_sigils[requested]
                 # TODO move sigil to a player spellbook structure
                 available_sigils_lock.release()
+            elif command == "CAST":
+                if len(split_message) == 2:
+                    # regular cast
+                    cast_sigil = None
+                    for sigil in player.wizard.spellbook:
+                        if sigil.uuid == split_message[1]:
+                            cast_sigil = sigil
+                    if cast_sigil:
+                        print "Casting", cast_sigil.name
+                        cast_sigil.start_time = time.time()
+                        casting_sigils.append(cast_sigil)
+                elif len(split_message) > 2:
+                    # combo cast
+                    # TODO implement
+                    pass
     # create new sigils
     if loop_count % 10 == 0:
         current_time = time.time()
@@ -187,5 +208,14 @@ while running:
             available_sigils_lock.release()
             broadcast("NEW " + sigil_serialize(new_sigil))
             sigils_deployed += 1
+
+    # check on sigils that are currently casting
+    for sigil in casting_sigils:
+        if (time.time() - sigil.start_time) >= sigil.cast_time:
+            broadcast("COMPLETE " + sigil.uuid + " " + sigil.owner.uuid)
+            casting_sigils.remove(sigil)
+            sigil.owner.wizard.spellbook.remove(sigil)
+            sigil = None
+            #sigil.on_cast()
 
     loop_count += 1
