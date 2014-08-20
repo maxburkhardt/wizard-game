@@ -15,7 +15,7 @@ class Combo(Sigil):
         all_uuids = ""
         for sigil in self.child_sigils:
             sigil.state = "COMBO_CASTING"
-            all_uuids += sigil.uuid
+            all_uuids += " " + sigil.uuid
         client_networking.send_queue.put("CAST " + all_uuids)
 
     def on_cast(self):

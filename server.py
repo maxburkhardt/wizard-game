@@ -6,7 +6,7 @@ import threading
 import Queue
 import time
 import random
-from sigils import heiroglyphs, futhark
+from sigils import heiroglyphs, futhark, combo
 from sigil_util import *
 from wizard import Wizard
 # for later:
@@ -101,7 +101,7 @@ def handle_stoc_socket(clientsock, addr, queue):
     try:
         while True:
             if not queue.empty():
-                clientsock.send(queue.get())
+                clientsock.send(queue.get() + "\n")
             else:
                 time.sleep(0.1)
     except socket.error as e:
@@ -129,15 +129,24 @@ def broadcast(message):
     for player in players:
         player.stoc_queue.put(message)
 
+
 def get_random_sigil():
     return random.choice([futhark.Fehu, heiroglyphs.Bird])
 
+
+def lookup_sigil(uuid):
+    try:
+        return sigil_uuid_map[uuid]
+    except KeyError:
+        return None
 
 # make data structures
 players = (Player(), Player())
 players_lock = threading.Lock()
 
-available_sigils = {}
+sigil_uuid_map = {}
+
+available_sigils = []
 available_sigils_lock = threading.Lock()
 
 casting_sigils = []
@@ -169,34 +178,44 @@ while running:
     for player in players:
         if not player.ctos_queue.empty():
             message = player.ctos_queue.get()
-            split_message = message.split(" ")
+            split_message = filter(lambda s: s != "", message.split(" "))
             command = split_message[0]
             if command == "CLAIM":
                 print "Saw a claim request"
-                requested = split_message[1]
+                requested = lookup_sigil(split_message[1])
+                if requested is None:
+                    continue
                 available_sigils_lock.acquire()
-                if requested in available_sigils.keys():
-                    broadcast("CLAIMED " + player.uuid + " " + requested)
-                    player.wizard.spellbook.append(available_sigils[requested])
-                    available_sigils[requested].owner = player
-                    del available_sigils[requested]
+                if requested in available_sigils:
+                    broadcast("CLAIMED " + player.uuid + " " + requested.uuid)
+                    player.wizard.spellbook.append(requested)
+                    requested.owner = player
+                    available_sigils.remove(requested)
                 # TODO move sigil to a player spellbook structure
                 available_sigils_lock.release()
             elif command == "CAST":
                 if len(split_message) == 2:
                     # regular cast
-                    cast_sigil = None
-                    for sigil in player.wizard.spellbook:
-                        if sigil.uuid == split_message[1]:
-                            cast_sigil = sigil
+                    cast_sigil = lookup_sigil(split_message[1])
                     if cast_sigil:
                         print "Casting", cast_sigil.name
                         cast_sigil.start_time = time.time()
                         casting_sigils.append(cast_sigil)
                 elif len(split_message) > 2:
                     # combo cast
-                    # TODO implement
-                    pass
+                    print "Got a combo cast"
+                    selected_sigils = map(lookup_sigil, split_message[1:])
+                    print "Split message:", split_message[1:]
+                    print "Selected sigils:", selected_sigils
+                    if None in selected_sigils:
+                        print "Breaking due to sigil lookup failure"
+                        continue
+                    combo_type = combo.select_combo("".join(sorted(map(str, selected_sigils))))
+                    selected_combo = combo_type(selected_sigils)
+                    selected_combo.start_time = time.time()
+                    selected_combo.owner = player
+                    casting_sigils.append(selected_combo)
+                    print "Casting", selected_combo.name
     # create new sigils
     if loop_count % 10 == 0:
         current_time = time.time()
@@ -204,18 +223,30 @@ while running:
             print "Deploying a sigil:", (current_time - start_time)
             new_sigil = get_random_sigil()()
             available_sigils_lock.acquire()
-            available_sigils[new_sigil.uuid] = new_sigil
+            available_sigils.append(new_sigil)
+            sigil_uuid_map[new_sigil.uuid] = new_sigil
             available_sigils_lock.release()
             broadcast("NEW " + sigil_serialize(new_sigil))
             sigils_deployed += 1
 
     # check on sigils that are currently casting
+    to_remove = []
     for sigil in casting_sigils:
         if (time.time() - sigil.start_time) >= sigil.cast_time:
-            broadcast("COMPLETE " + sigil.uuid + " " + sigil.owner.uuid)
-            casting_sigils.remove(sigil)
-            sigil.owner.wizard.spellbook.remove(sigil)
-            sigil = None
-            #sigil.on_cast()
+            print casting_sigils
+            broadcast("COMPLETE " + sigil_serialize(sigil) + " " + sigil.owner.uuid)
+            to_remove.append(sigil)
+            if sigil in sigil.owner.wizard.spellbook:
+                # if it's in the spellbook, this is a single sigil
+                sigil.owner.wizard.spellbook.remove(sigil)
+                broadcast("REMOVE " + sigil.uuid)
+            else:
+                # if it's not, then this is a combo and we have to remove individuals
+                for sub_sigil in sigil.child_sigils:
+                    sub_sigil.owner.wizard.spellbook.remove(sub_sigil)
+                    broadcast("REMOVE " + sub_sigil.uuid)
+    # we do this to avoid modifying the list we're looping through above
+    for sigil in to_remove:
+        casting_sigils.remove(sigil)
 
     loop_count += 1

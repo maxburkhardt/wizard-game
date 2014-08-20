@@ -62,8 +62,19 @@ if __name__ == "__main__":
         # check for messages from the server
         if not client_networking.recv_queue.empty():
             message = client_networking.recv_queue.get()
+            # if two messages got combined, then split them up and put the rest
+            # back in the queue for future processing
+            if message.count("\n") > 1:
+                separate = message.split("\n")
+                for next_message in separate[1:]:
+                    client_networking.recv_queue.put(next_message)
+                message = separate[0]
+            # now parse the one command we're looking at now
             split_input = map(str.strip, message.split(" "))
+            print split_input
             command = split_input[0]
+            print command
+            print message
             if command == "NEW":
                 generate_sigils([game_state.all_sprites, game_state.available_sprites], sigil_deserialize(split_input[1]))
             elif command == "CLAIMED":
@@ -75,8 +86,9 @@ if __name__ == "__main__":
                     # this means we didn't
                     claimed.execute_claim(opponent)
             elif command == "COMPLETE":
-                # TODO no combo support yet
-                print "Cast of", sprite_uuid_map[split_input[1]].name, "complete"
+                print "Cast of", sigil_deserialize(split_input[1]).name, "complete"
+            elif command == "REMOVE":
+                print "Removing sigil", split_input[1]
                 sprite_uuid_map[split_input[1]].remove()
             elif command == "HEALTH":
                 if split_input[1] == client_networking.client_uuid:

@@ -25,7 +25,7 @@ def establish_ctos_connection(server, port):
     ctos_connection.send("SEND " + client_uuid)
     while True:
         if not send_queue.empty():
-            ctos_connection.send(send_queue.get())
+            ctos_connection.send(send_queue.get() + "\n")
         else:
             time.sleep(0.1)
 

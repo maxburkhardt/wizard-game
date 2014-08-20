@@ -67,10 +67,16 @@ CAST SIGIL-UUID [SIGIL-UUID...]
 The client wishes to cast this sigil (or combo of sigils).
 ### Cast Complete (STOC)
 ```
-COMPLETE SIGIL-UUID [SIGIL-UUID...] PLAYER-UUID
+COMPLETE SIGIL PLAYER-UUID
 ```
 
-The specified sigil or combo of sigils has completed its cast. _TODO: who cast it?_
+The specified sigil or combo of sigils has completed its cast.
+### Remove Sigil (STOC)
+```
+REMOVE SIGIL-UUID
+```
+
+The specified sigil should be removed, presumably due to it being cast.
 ### Health Update (STOC)
 ```
 HEALTH PLAYER-UUID NEW-HEALTH
