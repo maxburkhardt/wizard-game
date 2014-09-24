@@ -89,7 +89,9 @@ def handle_ctos_socket(clientsock, addr, queue):
     try:
         while True:
             data = clientsock.recv(1024)
-            queue.put(data)
+            separated = filter(lambda x: x != "", data.split("|"))
+            for message in separated:
+                queue.put(message)
     except socket.error as e:
         print "Socket error encountered in ctos from", addr[0]
         print e.strerror
@@ -101,7 +103,7 @@ def handle_stoc_socket(clientsock, addr, queue):
     try:
         while True:
             if not queue.empty():
-                clientsock.send(queue.get() + "\n")
+                clientsock.send(queue.get() + "|")
             else:
                 time.sleep(0.1)
     except socket.error as e:

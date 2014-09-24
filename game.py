@@ -62,13 +62,6 @@ if __name__ == "__main__":
         # check for messages from the server
         if not client_networking.recv_queue.empty():
             message = client_networking.recv_queue.get()
-            # if two messages got combined, then split them up and put the rest
-            # back in the queue for future processing
-            if message.count("\n") > 1:
-                separate = message.split("\n")
-                for next_message in separate[1:]:
-                    client_networking.recv_queue.put(next_message)
-                message = separate[0]
             # now parse the one command we're looking at now
             split_input = map(str.strip, message.split(" "))
             print split_input

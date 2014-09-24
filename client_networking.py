@@ -25,7 +25,7 @@ def establish_ctos_connection(server, port):
     ctos_connection.send("SEND " + client_uuid)
     while True:
         if not send_queue.empty():
-            ctos_connection.send(send_queue.get() + "\n")
+            ctos_connection.send(send_queue.get() + "|")
         else:
             time.sleep(0.1)
 
@@ -37,4 +37,6 @@ def establish_stoc_connection(server, port):
     stoc_connection.send("RECV " + client_uuid)
     while True:
         data = stoc_connection.recv(1024)
-        recv_queue.put(data)
+        separated = filter(lambda x: x != "", data.split("|"))
+        for message in separated:
+            recv_queue.put(message)

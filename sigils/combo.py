@@ -6,7 +6,7 @@ import client_networking
 
 class Combo(Sigil):
     def __init__(self, name):
-        if self.child_sigils == None:
+        if self.child_sigils is None:
             print "Error! Combo instantiated without child sigils!"
             sys.exit(1)
         Sigil.__init__(self, name, (0, 0, 0))
