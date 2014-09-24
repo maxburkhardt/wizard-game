@@ -144,6 +144,8 @@ def lookup_sigil(uuid):
 
 # make data structures
 players = (Player(), Player())
+players[0].wizard.opponent = players[1].wizard
+players[1].wizard.opponent = players[0].wizard
 players_lock = threading.Lock()
 
 sigil_uuid_map = {}
@@ -236,7 +238,12 @@ while running:
     for sigil in casting_sigils:
         if (time.time() - sigil.start_time) >= sigil.cast_time:
             print casting_sigils
+            sigil.on_cast_server()
             broadcast("COMPLETE " + sigil_serialize(sigil) + " " + sigil.owner.uuid)
+            for player in players:
+                if player.wizard.health_changed:
+                    broadcast("HEALTH " + player.uuid + " " + str(player.wizard.health))
+                    player.wizard.health_changed = False
             to_remove.append(sigil)
             if sigil in sigil.owner.wizard.spellbook:
                 # if it's in the spellbook, this is a single sigil

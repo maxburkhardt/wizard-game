@@ -6,6 +6,8 @@ class Wizard:
         self.health = 100
         self.spellbook = []
         self.combo_select = []
+        self.opponent = None
+        self.health_changed = False
 
     def can_get_sigil(self):
         return len(self.spellbook) <= 7
@@ -24,3 +26,7 @@ class Wizard:
         for sigil in self.combo_select:
             sigil.deselect()
         self.combo_select = []
+
+    def modify_health(self, amount):
+        self.health_changed = True
+        self.health += amount

@@ -18,10 +18,6 @@ class Combo(Sigil):
             all_uuids += " " + sigil.uuid
         client_networking.send_queue.put("CAST " + all_uuids)
 
-    def on_cast(self):
-        for sigil in self.child_sigils:
-            sigil.remove()
-
 
 class BirdFehuCombo(Combo):
     def __init__(self, sigils):
@@ -30,9 +26,9 @@ class BirdFehuCombo(Combo):
         self.cast_time = 3
         Combo.__init__(self, "BirdFehu")
 
-    def on_cast(self):
+    def on_cast_server(self):
         print self.name, "was cast!"
-        Combo.on_cast(self)
+        self.owner.wizard.modify_health(15)
 
 
 class BirdBirdFehuCombo(Combo):
@@ -42,9 +38,9 @@ class BirdBirdFehuCombo(Combo):
         self.cast_time = 4
         Combo.__init__(self, "BirdBirdFehu")
 
-    def on_cast(self):
+    def on_cast_server(self):
         print self.name, "was cast!"
-        Combo.on_cast(self)
+        self.owner.wizard.opponent.modify_health(-15)
 
 
 VALID_COMBOS = {"birdfehu": BirdFehuCombo, "birdbirdfehu": BirdBirdFehuCombo}
