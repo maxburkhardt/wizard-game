@@ -15,9 +15,6 @@ class Bird(Heiroglyph):
         self.cast_time = 2
         Heiroglyph.__init__(self, self.name)
 
-    def on_cast(self):
-        if self.owner == game_state.player:
-            game_state.opponent.health -= 10
-        else:
-            game_state.player.health -= 10
-        print "bird finished casting!"
+    def on_cast_server(self):
+        self.owner.wizard.opponent.modify_health(-10)
+

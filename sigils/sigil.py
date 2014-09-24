@@ -2,6 +2,8 @@ import time
 from game_util import *
 import sigil_overlay
 import game_state
+import uuid
+import client_networking
 
 
 class Sigil(pygame.sprite.Sprite):
@@ -16,10 +18,11 @@ class Sigil(pygame.sprite.Sprite):
         self.state = "AVAILABLE"
         self.owner = None
         self.overlay = None
+        self.uuid = str(uuid.uuid4())
 
     def remove(self):
-        if self in game_state.player.spellbook:
-            game_state.player.spellbook.remove(self)
+        if self in self.owner.spellbook:
+            self.owner.spellbook.remove(self)
         game_state.all_sprites.remove(self)
         game_state.player.layout_sigils()
 
@@ -27,20 +30,30 @@ class Sigil(pygame.sprite.Sprite):
         if self.state == "AVAILABLE":
             self.rect.x -= 1
         elif self.state == "CASTING":
-            delta = time.time() - self.start_cast
-            if delta > self.cast_time:
-                self.state = "FINISHED"
-                self.on_cast()
-                self.remove()
+            pass
         elif self.state == "COMBO_CASTING":
             # TODO animation here?
             pass
+
+    def claim(self):
+        print "Sending claim message"
+        client_networking.send_queue.put("CLAIM " + self.uuid)
+        self.state = "CLAIMING"
+
+    def execute_claim(self, player):
+        spellbook_position = player.get_available_sigil_position()
+        self.rect.x = spellbook_position[0]
+        self.rect.y = spellbook_position[1]
+        game_state.available_sprites.remove(self)
+        player.spellbook.append(self)
+        self.state = "CLAIMED"
+        self.owner = player
 
     def cast(self):
         if self.state == "CASTING" or self.state == "COMBO_CASTING":
             return
         self.state = "CASTING"
-        self.start_cast = time.time()
+        client_networking.send_queue.put("CAST " + self.uuid)
 
     def select(self):
         if self.overlay:

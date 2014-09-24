@@ -15,6 +15,5 @@ class Fehu(Futhark):
         self.cast_time = 1
         Futhark.__init__(self, self.name)
 
-    def on_cast(self):
-        self.owner.health += 10
-        print "fehu finished casting!"
+    def on_cast_server(self):
+        self.owner.wizard.modify_health(10)

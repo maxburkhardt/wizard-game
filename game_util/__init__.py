@@ -38,3 +38,4 @@ def generate_ui():
     draw_health(font, game_state.opponent, (25, 25), background)
     draw_health(font, game_state.player, (25, 725), background)
     return background
+
